@@ -1,5 +1,4 @@
 from itertools import islice
-
 from cmp.utils import ContainerSet
 
 
@@ -8,7 +7,7 @@ def compute_local_first(firsts, alpha):
 
     try:
         alpha_is_epsilon = alpha.IsEpsilon
-    except ValueError:
+    except:
         alpha_is_epsilon = False
 
     if alpha_is_epsilon:
