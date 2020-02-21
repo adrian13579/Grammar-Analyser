@@ -1,6 +1,6 @@
 import first_follow as ff
 from cmp.pycompiler import Grammar
-from grammar import eliminate_left_recursion, remove_useless_non_terminals
+from grammar import eliminate_left_recursion, remove_useless_non_terminals, remove_unreachable_symbols
 
 G = Grammar()
 E = G.NonTerminal('E', True)
@@ -16,6 +16,7 @@ T %= T + plus
 # T %= F + Y
 # Y %= star + F + Y | div + F + Y
 # F %= num | opar + E + cpar
-eliminate_left_recursion(G)
-remove_useless_non_terminals(G)
+#eliminate_left_recursion(G)
+#remove_useless_non_terminals(G)
+remove_unreachable_symbols(G)
 print(G)

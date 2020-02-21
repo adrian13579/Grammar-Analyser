@@ -61,19 +61,38 @@ def remove_common_prefix(G: Grammar):
     pass
 
 
-# TODO No funciona si la gramatica tiene ciclos
 def remove_unreachable_symbols(G: Grammar):
-    reachable_symbols = {G.startSymbol}
+    reachable_symbols = {G.EOF}
     queue = [G.startSymbol]
-    visited = []
     while len(queue) != 0:
-        current_head = queue.remove(queue[0])
-        # ....
-        reachable_symbols.add(current_head)
-        for production in current_head.productions:
-            for sentence in production:
-                for i in range(len(sentence)):
-                    if sentence[i] not in queue:
-                        queue.append(sentence[i])
-                        reachable_symbols.add(sentence[i])
-    pass
+        current_head = queue[0]
+        queue.remove(current_head)
+
+        if current_head not in reachable_symbols:
+            reachable_symbols.add(current_head)
+            if current_head.IsNonTerminal:
+                for production in current_head.productions:
+                    for symbol in production.Right:
+                        if symbol not in queue:
+                            queue.append(symbol)
+
+    unreachable_symbols = []
+    for symbol in G.symbDict.values():
+        if symbol not in reachable_symbols:
+            unreachable_symbols.append(symbol)
+            if symbol.IsNonTerminal:
+                G.nonTerminals.remove(symbol)
+            else:
+                G.terminals.remove(symbol)
+
+    for production in G.Productions:
+        if production.Left in unreachable_symbols:
+            G.Productions.remove(production)
+        else:
+            for symbol in production.Right:
+                if symbol in unreachable_symbols:
+                    G.Productions.remove(production)
+                    break
+
+
+
