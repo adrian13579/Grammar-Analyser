@@ -1,13 +1,79 @@
-from cmp.pycompiler import Grammar, Production
+from cmp.pycompiler import Grammar, Production, Sentence, SentenceList
+from cmp.utils import ContainerSet
+from queue import Queue
 
 
-def eliminate_left_recursion(G: Grammar):  # -> Grammar:
+def eliminate_left_recursion(G: Grammar):
     recursive_prod = {}
     for production in G.Productions:
         if production.Left == production.Right[0]:
-            try:
-                recursive_prod[production.Left].append(production)
-            except KeyError:
-                recursive_prod[production.Left] = [production]
+            non_terminal = production.Left
+            for prod in non_terminal.productions:
+                try:
+                    recursive_prod[non_terminal].add(prod)
+                except KeyError:
+                    recursive_prod[non_terminal] = {prod}
+
+    for non_terminal in recursive_prod.keys():
+        new_non_teminal = G.NonTerminals(non_terminal.Name + "'")
+        for prod in recursive_prod[non_terminal]:
+            new_sentence = Sentence()
+            if prod.Right[0] == non_terminal:
+                for i in range(1, len(prod.Right)):
+                    new_sentence += prod.Right[i]
+                new_sentence += new_non_teminal[0]
+                new_production = Production(new_non_teminal[0], new_sentence)
+                G.Productions.append(new_production)
+            else:
+                for i in range(len(prod.Right)):
+                    new_sentence += prod.Right[i]
+                new_sentence += new_non_teminal[0]
+                new_production = Production(non_terminal, new_sentence)
+                G.Productions.append(new_production)
+            G.Productions.remove(prod)
+        G.Productions.append(Production(new_non_teminal[0], G.Epsilon))
 
 
+def remove_useless_non_terminals(G: Grammar):
+    usefull_non_terminals = ContainerSet()
+    change = True
+    while change:
+        change = False
+        for production in G.Productions:
+            for symbol in production.Right:
+                if symbol.IsNonTerminal:
+                    if symbol not in usefull_non_terminals:
+                        break
+            else:
+                change |= usefull_non_terminals.add(production.Left)
+    # TODO se puede mejorar 
+    for production in G.Productions:
+        if production.Left not in usefull_non_terminals:
+            G.Productions.remove(production)
+        else:
+            for symbol in production.Right:
+                if symbol.IsNonTerminal:
+                    if symbol not in usefull_non_terminals:
+                        G.Productions.remove(production)
+
+
+def remove_common_prefix(G: Grammar):
+    pass
+
+
+# TODO No funciona si la gramatica tiene ciclos
+def remove_unreachable_symbols(G: Grammar):
+    reachable_symbols = {G.startSymbol}
+    queue = [G.startSymbol]
+    visited = []
+    while len(queue) != 0:
+        current_head = queue.remove(queue[0])
+        # ....
+        reachable_symbols.add(current_head)
+        for production in current_head.productions:
+            for sentence in production:
+                for i in range(len(sentence)):
+                    if sentence[i] not in queue:
+                        queue.append(sentence[i])
+                        reachable_symbols.add(sentence[i])
+    pass
