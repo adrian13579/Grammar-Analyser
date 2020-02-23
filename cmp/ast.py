@@ -1,12 +1,15 @@
 import cmp.visitor as visitor
 
+
 class Node:
     def evaluate(self):
         raise NotImplementedError()
 
+
 class AtomicNode(Node):
     def __init__(self, lex):
         self.lex = lex
+
 
 class UnaryNode(Node):
     def __init__(self, node):
@@ -19,6 +22,7 @@ class UnaryNode(Node):
     @staticmethod
     def operate(value):
         raise NotImplementedError()
+
 
 class BinaryNode(Node):
     def __init__(self, left, right):
@@ -34,8 +38,8 @@ class BinaryNode(Node):
     def operate(lvalue, rvalue):
         raise NotImplementedError()
 
-def get_printer(AtomicNode=AtomicNode, UnaryNode=UnaryNode, BinaryNode=BinaryNode, ):
 
+def get_printer(AtomicNode=AtomicNode, UnaryNode=UnaryNode, BinaryNode=BinaryNode, ):
     class PrintVisitor(object):
         @visitor.on('node')
         def visit(self, node, tabs):
@@ -59,4 +63,4 @@ def get_printer(AtomicNode=AtomicNode, UnaryNode=UnaryNode, BinaryNode=BinaryNod
             return '\t' * tabs + f'\\__ {node.__class__.__name__}: {node.lex}'
 
     printer = PrintVisitor()
-    return (lambda ast: printer.visit(ast))
+    return lambda ast: printer.visit(ast)

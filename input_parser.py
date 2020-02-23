@@ -65,7 +65,7 @@ class GrammarNode(Node):
     def evaluate(self, context: Context):
         for i in self.lis:
             i.evaluate(context)
-        return context.Grammar
+        return
 
 
 class DistNode(Node):
@@ -126,7 +126,7 @@ class ProductionNode(Node):
     def evaluate(self, context: Context):
         prod_head = context.NonTerminals[self.left]
         prod_body = context.Grammar.Epsilon
-        if isinstance(self.right,SentenceNode):
+        if isinstance(self.right, SentenceNode):
             prod_body = self.right.evaluate(context)
         else:
             if self.right in context.Terminals:
@@ -137,34 +137,61 @@ class ProductionNode(Node):
         return
 
 
+class Input:
+    def __init__(self, input_grammar: str, input_regex: str):
+        first = compute_firsts(G)
+        follow = compute_follows(G, first)
+        parsing_table = build_parsing_table(G, first, follow)
+        parser = metodo_predictivo_no_recursivo(G, parsing_table)
+        tokens = lexer(input_grammar)
+        tokens = [x for x in tokens if
+                  x.token_type not in ('space', 'salto')]
+        left_parse = parser(tokens)
+        self.context = Context()
+        ast = evaluate_parse(left_parse, tokens)
+        ast.evaluate(self.context)
+
+        regex_str = ''
+        for i in input_regex:
+            if i not in (' ', '\n'):
+                regex_str += i
+        regex_str = regex_str.split(',')
+        regex = []
+        for i in regex_str:
+            print(i)
+            type, lex = i.split(':')
+            type = type.strip()
+            lex = lex.strip()
+            try:
+                regex.append((self.context.Grammar.symbDict[type], lex))
+            except KeyError:
+                raise Exception('Undefined Expression')
+
+        self.lexer = Lexer(regex, self.context.Grammar.EOF)
+
+    def get_grammar(self):
+        return self.context.Grammar
+
+    def tokenize_input_string(self, string: str):
+        return self.lexer(string)
 
 
-tokens = lexer('''
+input_gram = '''
 Distinguido: S
 NoTerminales: A, B, C
 Terminales: a, b, c
 S = A + B + C
 A = epsilon
-''')
+'''
 
-print(tokens)
-tokens = [x for x in tokens if
-          x.token_type not in ('space', 'salto')]
+input_regex = '''
+a : (a)*,
+b : (b)*,
+c : (c|C)*
+'''
 
-print(tokens)
-# lexer.automaton.graph().write_png('a.png')
-first = compute_firsts(G)
-follow = compute_follows(G, first)
-parsing_table = build_parsing_table(G, first, follow)
-parser = metodo_predictivo_no_recursivo(G, parsing_table)
-left_parse = parser(tokens)
-print(left_parse)
-context = Context()
-ast = evaluate_parse(left_parse, tokens)
-nfa = ast.evaluate(context)
-print(nfa)
+string = 'aaaaaabbbbcCCCcc'
 
-# dfa = nfa_to_dfa(nfa)
-# mini = automata_minimization(dfa)
-
-print(12)
+var = Input(input_gram, input_regex)
+print(var.get_grammar())
+print(var.tokenize_input_string(string))
