@@ -1,4 +1,4 @@
-from first_follow import compute_firsts, compute_follows
+from cmp.first_follow import compute_firsts, compute_follows
 
 
 def metodo_predictivo_no_recursivo(G, M):

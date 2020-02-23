@@ -1,6 +1,6 @@
 from cmp.automata import State
 from cmp.utils import Token
-from regular_expression import _regex
+from cmp.regular_expression import _regex
 
 
 class Lexer:

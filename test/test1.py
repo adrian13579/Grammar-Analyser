@@ -1,4 +1,4 @@
-import first_follow as ff
+from cmp import first_follow as ff
 from cmp.pycompiler import Grammar
 
 G = Grammar()

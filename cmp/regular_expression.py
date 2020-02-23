@@ -1,10 +1,10 @@
-from automata import NFA, DFA, nfa_to_dfa, automata_closure
-from automata import automata_union, automata_concatenation, automata_minimization  # automata_closure
+from cmp.automata import NFA, DFA, nfa_to_dfa, automata_closure
+from cmp.automata import automata_union, automata_concatenation, automata_minimization  # automata_closure
 from cmp.pycompiler import Grammar, EOF
 from cmp.utils import Token
-from first_follow import compute_firsts, compute_follows
-from ll1_parser import metodo_predictivo_no_recursivo, build_parsing_table
-from pydot import *
+from cmp.first_follow import compute_firsts, compute_follows
+from cmp.ll1_parser import metodo_predictivo_no_recursivo, build_parsing_table
+
 
 class Node:
     def evaluate(self):

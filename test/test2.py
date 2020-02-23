@@ -1,6 +1,6 @@
 from cmp.pycompiler import Production, Sentence, Grammar
-from first_follow import compute_firsts, compute_follows
-from ll1_parser import metodo_predictivo_no_recursivo, build_parsing_table, deprecated_metodo_predictivo_no_recursivo
+from cmp.first_follow import compute_firsts, compute_follows
+from cmp.ll1_parser import build_parsing_table, deprecated_metodo_predictivo_no_recursivo
 
 G = Grammar()
 E = G.NonTerminal('E', True)

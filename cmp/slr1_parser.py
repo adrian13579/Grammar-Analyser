@@ -1,7 +1,7 @@
 from cmp.automata import State
 from cmp.pycompiler import Item
-from first_follow import compute_firsts, compute_follows
-from shift_reduce_parser import ShiftReduceParser
+from cmp.first_follow import compute_firsts, compute_follows
+from cmp.shift_reduce_parser import ShiftReduceParser
 
 
 def build_LR0_automaton(G):

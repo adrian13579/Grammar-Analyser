@@ -1,4 +1,4 @@
-from lexer import Lexer
+from cmp.lexer import Lexer
 
 lexer = Lexer([('A', '(a|b|c)*'),('space','drian')], 'eof')
 

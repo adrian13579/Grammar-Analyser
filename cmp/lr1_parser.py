@@ -3,8 +3,8 @@ from pandas import DataFrame
 from cmp.automata import State, multiline_formatter
 from cmp.pycompiler import Item
 from cmp.utils import ContainerSet
-from first_follow import compute_local_first, compute_firsts
-from shift_reduce_parser import ShiftReduceParser
+from cmp.first_follow import compute_local_first, compute_firsts
+from cmp.shift_reduce_parser import ShiftReduceParser
 
 
 def expand(item, firsts):

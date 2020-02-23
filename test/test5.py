@@ -1,6 +1,5 @@
-import first_follow as ff
 from cmp.pycompiler import Grammar
-from grammar import eliminate_left_recursion, remove_useless_non_terminals, remove_unreachable_symbols, nullable_symbols
+from cmp.grammar import nullable_symbols
 
 G = Grammar()
 E = G.NonTerminal('E', True)
