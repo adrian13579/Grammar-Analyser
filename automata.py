@@ -202,77 +202,187 @@ def automata_concatenation(a1, a2):
     return NFA(states, finals, transitions, start)
 
 
-# TODO: Automata Clausura
-def automata_closure(a):
-    pass
+def automata_closure(a1):
+    transitions = {}
 
+    start = 0
+    d1 = 1
+    final = a1.states + d1
+
+    for (origin, symbol), destinations in a1.map.items():
+        transitions[origin + d1, symbol] = {d + d1 for d in destinations}
+    transitions[start, ''] = [a1.start + d1, final]
+
+    for f in a1.finals:
+        try:
+            X = transitions[f + d1, '']
+        except KeyError:
+            X = transitions[f + d1, ''] = set()
+        X.add(final)
+        X.add(a1.start + d1)
+    J = a1.states + 2
+    S = {final}
+    return NFA(J, S, transitions, start)
+
+
+# def distinguish_states(group, automaton, partition):
+#     split = {}
+#     vocabulary = tuple(automaton.vocabulary)
+#
+#     for member in group:
+#         # Your code here
+#         for subgroup in split.keys():
+#             for symbol in vocabulary:
+#                 try:
+#                     s_transition = automaton.transitions[member.value][symbol]
+#                 except KeyError:
+#                     s_transition = -1
+#                 try:
+#                     t_transition = automaton.transitions[subgroup][symbol]
+#                 except KeyError:
+#                     t_transition = -1
+#
+#                 if s_transition == -1 and t_transition != -1:
+#                     break
+#
+#                 if t_transition != -1 and s_transition == -1:
+#                     break
+#
+#                 if t_transition == -1 and s_transition == -1:
+#                     continue
+#
+#                 if not partition[s_transition[0]].representative == partition[t_transition[0]].representative:
+#                     break
+#             else:
+#                 a = split[subgroup]
+#                 a.append(member.value)
+#                 split[subgroup] = a
+#                 break
+#         else:
+#             split[member.value] = [member.value]
+#         pass
+#
+#     return [group for group in split.values()]
+#
+#
+# def state_minimization(automaton):
+#     partition = DisjointSet(*range(automaton.states))
+#
+#     ## partition = { NON-FINALS | FINALS }
+#     # Your code here
+#     non_finals = [state for state in range(automaton.states) if state not in automaton.finals]
+#     finals = [state for state in automaton.finals]
+#
+#     partition.merge(non_finals)
+#     partition.merge(finals)
+#
+#     while True:
+#         new_partition = DisjointSet(*range(automaton.states))
+#
+#         ## Split each group if needed (use distinguish_states(group, automaton, partition))
+#         # Your code here
+#         for group in partition.groups:
+#             if len(group) > 1:
+#                 new_partition.merge([i.value for i in group])
+#
+#         aux_partition = DisjointSet(*range(automaton.states))
+#         for group in new_partition.groups:
+#             new_groups = distinguish_states(group, automaton, new_partition)
+#             for i in new_groups:
+#                 aux_partition.merge(i)
+#         new_partition = aux_partition
+#
+#         if len(new_partition) == len(partition):
+#             break
+#
+#         partition = new_partition
+#
+#     return partition
+#
+#
+# def automata_minimization(automaton):
+#     partition = state_minimization(automaton)
+#
+#     states = [s for s in partition.representatives]
+#
+#     transitions = {}
+#     for i, state in enumerate(states):
+#         origin = state.value
+#         for symbol, destinations in automaton.transitions[origin].items():
+#             fixed_destinations = []
+#             for st in destinations:
+#                 representative = partition[st].representative
+#                 fixed_destinations.append(states.index(representative))
+#             try:
+#                 transitions[i, symbol]
+#                 assert False
+#             except KeyError:
+#                 transitions[i, symbol] = fixed_destinations[0]
+#
+#     finals = []
+#     start = 0
+#
+#     for i, state_representative in enumerate(states):
+#         for group in partition.groups:
+#             if state_representative in group:
+#                 for state in group:
+#                     if state.value in automaton.finals:
+#                         finals.append(i)
+#                         break
+#                     if state.value == automaton.start:
+#                         start = i
+#
+#     return DFA(len(states), finals, transitions, start)
 
 def distinguish_states(group, automaton, partition):
     split = {}
     vocabulary = tuple(automaton.vocabulary)
 
+    transition = automaton.transitions
+
     for member in group:
-        # Your code here
-        for subgroup in split.keys():
+        for item in split.keys():
             for symbol in vocabulary:
+                q1 = None
+                q2 = None
                 try:
-                    s_transition = automaton.transitions[member.value][symbol]
+                    q1 = partition[transition[item][symbol][0]].representative
                 except KeyError:
-                    s_transition = -1
+                    q1 = None
                 try:
-                    t_transition = automaton.transitions[subgroup][symbol]
+                    q2 = partition[transition[member.value][symbol][0]].representative
                 except KeyError:
-                    t_transition = -1
-
-                if s_transition == -1 and t_transition != -1:
-                    break
-
-                if t_transition != -1 and s_transition == -1:
-                    break
-
-                if t_transition == -1 and s_transition == -1:
-                    continue
-
-                if not partition[s_transition[0]].representative == partition[t_transition[0]].representative:
+                    q2 = None
+                if q1 != q2:
                     break
             else:
-                a = split[subgroup]
-                a.append(member.value)
-                split[subgroup] = a
+                split[item].append(member.value)
                 break
         else:
             split[member.value] = [member.value]
-        pass
 
-    return [group for group in split.values()]
+
+    return [ group for group in split.values()]
+
 
 
 def state_minimization(automaton):
     partition = DisjointSet(*range(automaton.states))
 
     ## partition = { NON-FINALS | FINALS }
-    # Your code here
-    non_finals = [state for state in range(automaton.states) if state not in automaton.finals]
-    finals = [state for state in automaton.finals]
-
-    partition.merge(non_finals)
+    finals = list(automaton.finals)
+    non_finals = [state for state in range(automaton.states) if not state in automaton.finals]
     partition.merge(finals)
+    partition.merge(non_finals)
 
     while True:
         new_partition = DisjointSet(*range(automaton.states))
 
         ## Split each group if needed (use distinguish_states(group, automaton, partition))
-        # Your code here
         for group in partition.groups:
-            if len(group) > 1:
-                new_partition.merge([i.value for i in group])
-
-        aux_partition = DisjointSet(*range(automaton.states))
-        for group in new_partition.groups:
-            new_groups = distinguish_states(group, automaton, new_partition)
-            for i in new_groups:
-                aux_partition.merge(i)
-        new_partition = aux_partition
+            new_groups = distinguish_states(group, automaton, partition)
+            for new_group in new_groups:
+                new_partition.merge(new_group)
 
         if len(new_partition) == len(partition):
             break
@@ -280,6 +390,7 @@ def state_minimization(automaton):
         partition = new_partition
 
     return partition
+
 
 
 def automata_minimization(automaton):
@@ -291,27 +402,18 @@ def automata_minimization(automaton):
     for i, state in enumerate(states):
         origin = state.value
         for symbol, destinations in automaton.transitions[origin].items():
-            fixed_destinations = []
-            for st in destinations:
-                representative = partition[st].representative
-                fixed_destinations.append(states.index(representative))
+            new_dest = states.index(partition[destinations[0]].representative)
+
             try:
-                transitions[i, symbol]
+                transitions[i,symbol]
                 assert False
             except KeyError:
-                transitions[i, symbol] = fixed_destinations[0]
+                transitions[i, symbol] = new_dest
+                pass
 
-    finals = []
-    start = 0
-
-    for i, state_representative in enumerate(states):
-        for group in partition.groups:
-            if state_representative in group:
-                for state in group:
-                    if state.value in automaton.finals:
-                        finals.append(i)
-                        break
-                    if state.value == automaton.start:
-                        start = i
+    start = states.index(partition[automaton.start].representative)
+    finals = set([i for i in range(len(states)) if states[i].value in automaton.finals])
 
     return DFA(len(states), finals, transitions, start)
+
+

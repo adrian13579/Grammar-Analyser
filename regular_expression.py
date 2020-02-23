@@ -4,7 +4,7 @@ from cmp.pycompiler import Grammar, EOF
 from cmp.utils import Token
 from first_follow import compute_firsts, compute_follows
 from ll1_parser import metodo_predictivo_no_recursivo, build_parsing_table
-
+from pydot import *
 
 class Node:
     def evaluate(self):
@@ -105,7 +105,7 @@ def regex_tokenizer(text, G, skip_whitespaces=True):
     for char in text:
         if skip_whitespaces and char.isspace():
             continue
-        char_token = ''
+        char_token = ' '
         try:
             char_token = fixed_tokens[char]
         except KeyError:
@@ -155,7 +155,7 @@ def evaluate(production, left_parse, tokens, inherited_value=None):
 
 
 def _regex(expression: str) -> DFA:
-    tokens = regex_tokenizer(expression, G)
+    tokens = regex_tokenizer(expression, G,False)
     first = compute_firsts(G)
     follow = compute_follows(G, first)
     parsing_table = build_parsing_table(G, first, follow)
@@ -165,4 +165,6 @@ def _regex(expression: str) -> DFA:
     nfa = ast.evaluate()
     dfa = nfa_to_dfa(nfa)
     mini = automata_minimization(dfa)
+    # mini.graph().write_png('mini.png')
     return mini
+    # return dfa

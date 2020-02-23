@@ -1,6 +1,5 @@
-from cmp.pycompiler import Grammar, Production, Sentence, SentenceList
+from cmp.pycompiler import Grammar, Production, Sentence
 from cmp.utils import ContainerSet
-from queue import Queue
 
 
 def eliminate_left_recursion(G: Grammar):
@@ -95,4 +94,19 @@ def remove_unreachable_symbols(G: Grammar):
                     break
 
 
+def nullable_symbols(G: Grammar) -> ContainerSet:
+    _nullable_symbols = ContainerSet()
+    change = True
+    while change:
+        change = False
+        for production in G.Productions:
+            if production.Right == G.Epsilon or all(symbol in _nullable_symbols for symbol in production.Right):
+                change |= _nullable_symbols.add(production.Left)
+
+    return _nullable_symbols
+
+
+def eliminate_epsilon_productions(G:Grammar):
+    
+    pass
 

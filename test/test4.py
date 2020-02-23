@@ -1,7 +1,7 @@
 from lexer import Lexer
 
-lexer = Lexer([('A', '(a|b)')], 'eof')
+lexer = Lexer([('A', '(a|b|c)*'),('space','drian')], 'eof')
 
-tokens = lexer('ab')
+tokens = lexer('abcdrian')
 lexer.automaton.graph().write_png('a.png')
 print(tokens)

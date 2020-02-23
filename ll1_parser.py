@@ -18,23 +18,47 @@ def deprecated_metodo_predictivo_no_recursivo(G, M=None, firsts=None, follows=No
             follows = compute_follows(G, firsts)
         M = build_parsing_table(G, firsts, follows)
 
+    # def parser(w):
+    #     stack = [G.startSymbol]
+    #     cursor = 0
+    #     output = []
+    #     while len(stack) != 0:
+    #         top = stack.pop()
+    #         a = w[cursor]
+    #         if top.IsTerminal:
+    #             if a == top:
+    #                 cursor += 1
+    #             else:
+    #                 raise Exception("Parsing error")
+    #         elif top.IsNonTerminal:
+    #             production = M[top, a]
+    #             for i in reversed(production[0].Right):
+    #                 stack.append(i)
+    #             output.append(production[0])
+    #     return output
     def parser(w):
-        stack = [G.startSymbol]
+        stack = [G.EOF, G.startSymbol]
         cursor = 0
         output = []
-        while len(stack) != 0:
+
+        while True:
+            # print(stack, cursor)
             top = stack.pop()
             a = w[cursor]
-            if top.IsTerminal:
-                if a == top:
-                    cursor += 1
-                else:
-                    raise Exception("Parsing error")
-            elif top.IsNonTerminal:
-                production = M[top, a]
-                for i in reversed(production[0].Right):
-                    stack.append(i)
-                output.append(production[0])
+
+            if top.IsEpsilon:
+                pass
+            elif top.IsTerminal:
+                assert top == a
+                if top == G.EOF:
+                    break;
+                cursor += 1
+            else:
+                production = M[top, a][0]
+                output.append(production)
+                production = list(production.Right)
+                stack.extend(production[::-1])
+
         return output
 
     return parser
@@ -49,11 +73,21 @@ def build_parsing_table(G, firsts, follows):
 
         for terminal in G.terminals:
             if terminal in firsts[alpha].set:
-                M[X, terminal] = [production]
+                try:
+                    M[X, terminal].append(production)
+                except KeyError:
+                    M[X, terminal] = [production]
+
             if firsts[alpha].contains_epsilon and terminal in follows[X]:
-                M[X, terminal] = [production]
+                try:
+                    M[X, terminal].append(production)
+                except KeyError:
+                    M[X, terminal] = [production]
 
         if firsts[alpha].contains_epsilon and G.EOF in follows[X]:
-            M[X, G.EOF] = [production]
+            try:
+                M[X, G.EOF].append(production)
+            except KeyError:
+                M[X, G.EOF] = [production]
 
     return M
