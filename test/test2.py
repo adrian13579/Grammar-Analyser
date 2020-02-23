@@ -1,6 +1,6 @@
 from cmp.pycompiler import Production, Sentence, Grammar
 from first_follow import compute_firsts, compute_follows
-from ll1_parser import metodo_predictivo_no_recursivo, build_parsing_table
+from ll1_parser import metodo_predictivo_no_recursivo, build_parsing_table, deprecated_metodo_predictivo_no_recursivo
 
 G = Grammar()
 E = G.NonTerminal('E', True)
@@ -17,7 +17,7 @@ print(G)
 firsts = compute_firsts(G)
 follows = compute_follows(G, firsts)
 M = build_parsing_table(G, firsts, follows)
-parser = metodo_predictivo_no_recursivo(G, M)
+parser = deprecated_metodo_predictivo_no_recursivo(G, M)
 left_parse = parser([num, star, num, star, num, plus, num, star, num, plus, num, plus, num, G.EOF])
 
 assert left_parse == [

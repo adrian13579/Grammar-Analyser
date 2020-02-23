@@ -1,6 +1,6 @@
 from automata import nfa_to_dfa, automata_minimization
 from cmp.ast import Node
-from cmp.pycompiler import Grammar, Terminal
+from cmp.pycompiler import Grammar, Terminal, Production
 from first_follow import compute_follows, compute_firsts
 from lexer import Lexer
 from ll1_parser import metodo_predictivo_no_recursivo, build_parsing_table
@@ -12,24 +12,24 @@ D, N, NA, T, TA, R, Q, O, Z = G.NonTerminals('D N NA T TA R Q O Z')
 dist, non_terminal, terminal, points, _id, comma, equal, plus, epsilon = G.Terminals(
     'Distinguido NoTerminal Terminal : id , = + ε')
 
-S %= D + N + T + Q + R
-D %= dist + points + _id
+S %= D + N + T + Q + R, lambda h, s: GrammarNode([s[1], s[2], s[3], s[4], s[5]])
+D %= dist + points + _id, lambda h, s: DistNode(s[3])
 
-N %= non_terminal + points + _id + NA
-NA %= comma + _id + NA
-NA %= G.Epsilon
+N %= non_terminal + points + _id + NA, lambda h, s: GrammarNode([NonTerminalNode(s[3]), s[4]]),
+NA %= comma + _id + NA, lambda h, s: GrammarNode([NonTerminalNode(s[2]), s[3]])
+NA %= G.Epsilon, lambda h, s: EpsilonNode()
 
-T %= terminal + points + _id + TA
-TA %= comma + _id + TA
-TA %= G.Epsilon
+T %= terminal + points + _id + TA, lambda h, s: GrammarNode([TerminalNode(s[3]), s[4]])
+TA %= comma + _id + TA, lambda h, s: GrammarNode([TerminalNode(s[2]), s[3]])
+TA %= G.Epsilon, lambda h, s: EpsilonNode()
 
-R %= Q + R
-R %= G.Epsilon
+R %= Q + R, lambda h, s: GrammarNode([s[1], s[2]])
+R %= G.Epsilon, lambda h, s: EpsilonNode()
 
-Q %= _id + equal + O
-O %= _id + Z
-Z %= plus + _id + Z
-Z %= G.Epsilon
+Q %= _id + equal + O, lambda h, s: ProductionNode(s[1], s[3])
+O %= _id + Z, lambda h, s: s[2], None, lambda h, s: s[1]
+Z %= plus + _id + Z, lambda h, s: s[3], None, None, lambda h, s: SentenceNode(h[0], s[2])
+Z %= G.Epsilon, lambda h, s: h[0]
 
 nonzero_digits = '|'.join(str(n) for n in range(1, 10))
 letters = '|'.join(chr(n) for n in range(ord('a'), ord('z') + 1))
@@ -52,9 +52,9 @@ lexer = Lexer([
 
 class Context:
     def __init__(self):
+        self.NonTerminals = {}
         self.Grammar = Grammar()
         self.Terminals = {}
-        self.NTerminals = {}
         self.Productions = {}
 
 
@@ -67,8 +67,75 @@ class GrammarNode(Node):
             i.evaluate(context)
         return context.Grammar
 
+
+class DistNode(Node):
+    def __init__(self, dist_id):
+        self.dist_id = dist_id
+
+    def evaluate(self, context: Context):
+        context.NonTerminals[self.dist_id] = context.Grammar.NonTerminal(self.dist_id, True)
+
+
 class TerminalNode(Node):
-    def __init__(self,terminal:Terminal):
+    def __init__(self, terminal_id):
+        self.terminal_id = terminal_id
+
+    def evaluate(self, context: Context):
+        context.Terminals[self.terminal_id] = context.Grammar.Terminal(self.terminal_id)
+        return
+
+
+class NonTerminalNode(Node):
+    def __init__(self, non_terimnal_id):
+        self.non_terminal_id = non_terimnal_id
+
+    def evaluate(self, context: Context):
+        context.NonTerminals[self.non_terminal_id] = context.Grammar.NonTerminal(self.non_terminal_id)
+        return
+
+
+class EpsilonNode(Node):
+    def __init__(self):
+        pass
+
+    def evaluate(self, context: Context):
+        return
+
+
+class SentenceNode(Node):
+    def __init__(self, left, right):
+        self.left = left
+        self.right = right
+
+    def evaluate(self, context: Context):
+        b = context.Terminals[str(self.right)] if str(self.right) in context.Terminals else context.NonTerminals[
+            str(self.right)]
+        if not isinstance(self.left, SentenceNode):
+            a = context.Terminals[str(self.left)] if str(self.left) in context.Terminals else context.NonTerminals[
+                str(self.left)]
+            return a + b
+        temp = self.left.evaluate(context)
+        return temp + b
+
+
+class ProductionNode(Node):
+    def __init__(self, left, right):
+        self.left = left
+        self.right = right
+
+    def evaluate(self, context: Context):
+        prod_head = context.NonTerminals[self.left]
+        prod_body = context.Grammar.Epsilon
+        if isinstance(self.right,SentenceNode):
+            prod_body = self.right.evaluate(context)
+        else:
+            if self.right in context.Terminals:
+                prod_body = context.Terminals[self.right]
+            elif self.right in context.NonTerminals:
+                prod_body = context.NonTerminals[self.right]
+        context.Grammar.Add_Production(Production(prod_head, prod_body))
+        return
+
 
 
 
@@ -77,9 +144,7 @@ Distinguido: S
 NoTerminales: A, B, C
 Terminales: a, b, c
 S = A + B + C
-A = a + A
-B = b + B
-C = c + C
+A = epsilon
 ''')
 
 print(tokens)
@@ -94,8 +159,11 @@ parsing_table = build_parsing_table(G, first, follow)
 parser = metodo_predictivo_no_recursivo(G, parsing_table)
 left_parse = parser(tokens)
 print(left_parse)
-# ast = evaluate_parse(left_parse, tokens)
-# nfa = ast.evaluate()
+context = Context()
+ast = evaluate_parse(left_parse, tokens)
+nfa = ast.evaluate(context)
+print(nfa)
+
 # dfa = nfa_to_dfa(nfa)
 # mini = automata_minimization(dfa)
 
