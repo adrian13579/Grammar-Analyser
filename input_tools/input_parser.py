@@ -73,11 +73,11 @@ class Input:
         regex = []
         for i in regex_str:
             print(i)
-            type, lex = i.split(':')
-            type = type.strip()
+            _type, lex = i.split(':')
+            _type = _type.strip()
             lex = lex.strip()
             try:
-                regex.append((self.context.Grammar.symbDict[type], lex))
+                regex.append((self.context.Grammar.symbDict[_type], lex))
             except KeyError:
                 raise Exception('Undefined Expression')
 
@@ -106,6 +106,6 @@ c : (c|C)*
 
 string = 'aaaaaabbbbcCCCcc'
 
-var = Input(input_gram, input_rege)
-print(var.get_grammar())
-print(var.tokenize_input_string(string))
+# var = Input(input_gram, input_rege)
+# print(var.get_grammar())
+# print(var.tokenize_input_string(string))

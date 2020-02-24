@@ -1,53 +1,57 @@
-from collections import defaultdict
+from cmp.pycompiler import Terminal, Sentence, Grammar, Symbol
+
+Symbol
 
 
 class TrieNode:
 
-    def __init__(self):
-        self.children = {} # defaultdict()
-        self.terminating = False
+    def __init__(self, value, terminating=False):
+        self.value = value
+        self.children = {}
+        self.terminating = terminating
 
 
 class Trie:
 
     def __init__(self):
-        self.root = self.get_node()
+        self.root = TrieNode(' ')
 
-    def get_node(self):
-        return TrieNode()
-
-    def get_index(self, ch):
-        return ord(ch) - ord('a')
-
-    def insert(self, word):
-
+    def insert(self, sentence: Sentence):
         root = self.root
-        len1 = len(word)
-
-        for i in range(len1):
-            index = self.get_index(word[i])
-
-            if index not in root.children:
-                root.children[index] = self.get_node()
-            root = root.children[index]
-
+        for symbol in sentence:
+            if symbol not in root.children:
+                root.children[symbol] = TrieNode(symbol)
+            root = root.children[symbol]
         root.terminating = True
 
-    def search(self, word):
+    def search_prefix(self):
         root = self.root
-        len1 = len(word)
-
-        for i in range(len1):
-            index = self.get_index(word[i])
-            if not root:
-                return False
-            root = root.children.get(index)
-
-        return True if root and root.terminating else False
+        if len(root.children) == 1:
+            prefix = Sentence()
+            root = list(root.children.values())[0]
+            while True:
+                prefix += root.value
+                if len(root.children) > 1 or len(root.children) == 0:
+                    break
+                root = list(root.children.values())[0]
+            return prefix
+        else:
+            return
 
 
 if __name__ == '__main__':
     trie = Trie()
-    trie.insert('hola')
-    trie.insert('horario')
+    G = Grammar()
+    E = G.NonTerminal('E', True)
+    T, F, X, Y = G.NonTerminals('T F X Y')
+    plus, minus, star, div, opar, cpar, num = G.Terminals('+ - * / ( ) num')
 
+    E %= T + X
+    X %= plus + T + X | minus + T + X | G.Epsilon
+    T %= F + Y
+    Y %= star + F + Y | div + F + Y | G.Epsilon
+    F %= num | opar + E + cpar
+    trie.insert(Sentence(E, T))
+    trie.insert(Sentence(E, T, F))
+    trie.insert(Sentence(E, T, X))
+    print(trie.search_prefix())

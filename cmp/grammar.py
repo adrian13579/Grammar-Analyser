@@ -1,4 +1,5 @@
 from cmp.pycompiler import Grammar, Production, Sentence
+from cmp.trie import Trie
 from cmp.utils import ContainerSet
 
 
@@ -56,8 +57,33 @@ def remove_useless_non_terminals(G: Grammar):
                         G.Productions.remove(production)
 
 
+def contain_prefix(prefix, sentence):
+    index = 0
+    ans = False
+    for i, symbol in enumerate(prefix):
+        ans = (symbol == sentence[i])
+        index = i
+    return ans, index + 1
+
+
+# TODO hay q probarlo
 def remove_common_prefix(G: Grammar):
-    pass
+    for non_terminal in G.nonTerminals:
+        trie = Trie()
+        for prod in non_terminal.productions:
+            trie.insert(prod.Right)
+        prefix = trie.search_prefix()
+        if prefix is not None:
+            new_non_teminal = G.NonTerminals(non_terminal.Name + "'")
+            for prod in non_terminal.productions:
+                contains, index = contain_prefix(prefix, prod.Right)
+                if contains:
+                    sentence = Sentence()
+                    for i in range(index, len(prod.Right)):
+                        sentence += prod.Right[i]
+                    G.Add_Production(Production(new_non_teminal, sentence))
+                    G.Productions.remove(prod)
+            G.Add_Production(Production(non_terminal, prefix + new_non_teminal))
 
 
 def remove_unreachable_symbols(G: Grammar):
@@ -106,7 +132,5 @@ def nullable_symbols(G: Grammar) -> ContainerSet:
     return _nullable_symbols
 
 
-def eliminate_epsilon_productions(G:Grammar):
-    
+def eliminate_epsilon_productions(G: Grammar):
     pass
-
