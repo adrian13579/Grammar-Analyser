@@ -1,7 +1,5 @@
 from cmp.pycompiler import Terminal, Sentence, Grammar, Symbol
 
-Symbol
-
 
 class TrieNode:
 
@@ -34,6 +32,8 @@ class Trie:
                 if len(root.children) > 1 or len(root.children) == 0:
                     break
                 root = list(root.children.values())[0]
+            if root.terminating:
+                return
             return prefix
         else:
             return

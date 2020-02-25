@@ -47,40 +47,78 @@ def build_LR0_automaton(G):
 
     return automaton
 
-
 class SLR1Parser(ShiftReduceParser):
 
-    def _build_parsing_table(self):
-        G = self.G.AugmentedGrammar(True)
-        firsts = compute_firsts(G)
-        follows = compute_follows(G, firsts)
+        def _build_parsing_table(self):
+            G = self.G.AugmentedGrammar(True)
+            firsts = compute_firsts(G)
+            follows = compute_follows(G, firsts)
 
-        automaton = build_LR0_automaton(G).to_deterministic()
-        for i, node in enumerate(automaton):
-            if self.verbose:
-                print(i, '\t', '\n\t '.join(str(x) for x in node.state), '\n')
-            node.idx = i
+            automaton = build_LR0_automaton(G).to_deterministic()
+            for i, node in enumerate(automaton):
+                if self.verbose: print(i, node)
+                node.idx = i
 
-        for node in automaton:
-            idx = node.idx
-            for state in node.state:
-                item = state.state
-                # Your code here!!!
-                # - Fill `self.Action` and `self.Goto` according to `item`)
-                # - Feel free to use `self._register(...)`)
-                if item.IsReduceItem and item.production.Left == G.startSymbol:
-                    self._register(self.action, (idx, G.EOF), (self.OK, 0))
-                elif item.IsReduceItem:
-                    for symbol in follows[item.production.Left]:
-                        self._register(self.action, (idx, symbol), (self.REDUCE, item.production))
-                elif item.NextSymbol.IsTerminal:
-                    next_idx = node.transitions[item.NextSymbol.Name][0].idx
-                    self._register(self.action, (idx, item.NextSymbol), (self.SHIFT, next_idx))
-                elif item.NextSymbol.IsNonTerminal:
-                    next_idx = node.transitions[item.NextSymbol.Name][0].idx
-                    self._register(self.goto, (idx, item.NextSymbol), next_idx)
+            for node in automaton:
+                idx = node.idx
+                for state in node.state:
+                    item = state.state
+                    # Your code here!!!
+                    # - Fill `self.Action` and `self.Goto` according to `item`)
+                    # - Feel free to use `self._register(...)`)
+                    if item.IsReduceItem:
+                        prod = item.production
+                        if prod.Left == G.startSymbol:
+                            SLR1Parser._register(self.action, (idx, G.EOF), (ShiftReduceParser.OK, None))
+                        else:
+                            for symbol in follows[prod.Left]:
+                                SLR1Parser._register(self.action, (idx, symbol), (ShiftReduceParser.REDUCE, prod))
+                    else:
+                        next_symbol = item.NextSymbol
+                        if next_symbol.IsTerminal:
+                            SLR1Parser._register(self.action, (idx, next_symbol),
+                                                 (ShiftReduceParser.SHIFT, node[next_symbol.Name][0].idx))
+                        else:
+                            SLR1Parser._register(self.goto, (idx, next_symbol), node[next_symbol.Name][0].idx)
 
-    @staticmethod
-    def _register(table, key, value):
-        assert key not in table or table[key] == value, 'Shift-Reduce or Reduce-Reduce conflict!!!'
-        table[key] = value
+        @staticmethod
+        def _register(table, key, value):
+            assert key not in table or table[key] == value, 'Shift-Reduce or Reduce-Reduce conflict!!!'
+            table[key] = value
+
+    # class SLR1Parser(ShiftReduceParser):
+#
+#     def _build_parsing_table(self):
+#         G = self.G.AugmentedGrammar(True)
+#         firsts = compute_firsts(G)
+#         follows = compute_follows(G, firsts)
+#
+#         automaton = build_LR0_automaton(G).to_deterministic()
+#         for i, node in enumerate(automaton):
+#             if self.verbose:
+#                 print(i, '\t', '\n\t '.join(str(x) for x in node.state), '\n')
+#             node.idx = i
+#
+#         for node in automaton:
+#             idx = node.idx
+#             for state in node.state:
+#                 item = state.state
+#                 # Your code here!!!
+#                 # - Fill `self.Action` and `self.Goto` according to `item`)
+#                 # - Feel free to use `self._register(...)`)
+#                 if item.IsReduceItem and item.production.Left == G.startSymbol:
+#                     self._register(self.action, (idx, G.EOF), (self.OK, 0))
+#                 elif item.IsReduceItem:
+#                     for symbol in follows[item.production.Left]:
+#                         self._register(self.action, (idx, symbol), (self.REDUCE, item.production))
+#                 elif item.NextSymbol.IsTerminal:
+#                     next_idx = node.transitions[item.NextSymbol.Name][0].idx
+#                     self._register(self.action, (idx, item.NextSymbol), (self.SHIFT, next_idx))
+#                 elif item.NextSymbol.IsNonTerminal:
+#                     next_idx = node.transitions[item.NextSymbol.Name][0].idx
+#                     self._register(self.goto, (idx, item.NextSymbol), next_idx)
+
+    # @staticmethod
+    # def _register(table, key, value):
+    #     assert key not in table or table[key] == value, 'Shift-Reduce or Reduce-Reduce conflict!!!'
+    #     table[key] = value

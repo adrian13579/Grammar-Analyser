@@ -6,7 +6,12 @@ from cmp.utils import ContainerSet
 def eliminate_left_recursion(G: Grammar):
     recursive_prod = {}
     for production in G.Productions:
-        if production.Left == production.Right[0]:
+        if production.Right.IsEpsilon:
+            continue
+        first_symbol = production.Right if not isinstance(production.Right, Sentence) else production.Right[0]
+        if not isinstance(production.Right, Sentence):
+            pass
+        if production.Left == first_symbol:
             non_terminal = production.Left
             for prod in non_terminal.productions:
                 try:
@@ -74,7 +79,7 @@ def remove_common_prefix(G: Grammar):
             trie.insert(prod.Right)
         prefix = trie.search_prefix()
         if prefix is not None:
-            new_non_teminal = G.NonTerminals(non_terminal.Name + "'")
+            new_non_teminal = G.NonTerminals(non_terminal.Name + "'")[0]
             for prod in non_terminal.productions:
                 contains, index = contain_prefix(prefix, prod.Right)
                 if contains:

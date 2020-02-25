@@ -1,0 +1,14 @@
+digraph G {
+margin=0.1;
+rankdir=LR;
+start [height=0, label="", shape=plaintext, width=0];
+1 [shape=circle, style=""];
+1 [shape=circle, style=""];
+1 -> 1  [label=a, labeldistance=2];
+5 [shape=circle, style=bold];
+1 -> 5  [label=a, labeldistance=2];
+0 [shape=circle, style=bold];
+1 [shape=circle, style=""];
+0 -> 1  [label="ε", labeldistance=2];
+start -> 0  [label="", style=dashed];
+}

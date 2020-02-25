@@ -1,4 +1,4 @@
-from pandas import DataFrame
+# from pandas import DataFrame
 
 from cmp.automata import State, multiline_formatter
 from cmp.pycompiler import Item
@@ -135,28 +135,28 @@ class LR1Parser(ShiftReduceParser):
         table[key] = value
 
 
-def encode_value(value):
-    try:
-        action, tag = value
-        if action == ShiftReduceParser.SHIFT:
-            return 'S' + str(tag)
-        elif action == ShiftReduceParser.REDUCE:
-            return repr(tag)
-        elif action == ShiftReduceParser.OK:
-            return action
-        else:
-            return value
-    except TypeError:
-        return value
+# def encode_value(value):
+#     try:
+#         action, tag = value
+#         if action == ShiftReduceParser.SHIFT:
+#             return 'S' + str(tag)
+#         elif action == ShiftReduceParser.REDUCE:
+#             return repr(tag)
+#         elif action == ShiftReduceParser.OK:
+#             return action
+#         else:
+#             return value
+#     except TypeError:
+#         return value
 
 
-def table_to_dataframe(table):
-    d = {}
-    for (state, symbol), value in table.items():
-        value = encode_value(value)
-        try:
-            d[state][symbol] = value
-        except KeyError:
-            d[state] = {symbol: value}
-
-    return DataFrame.from_dict(d, orient='index', dtype=str)
+# def table_to_dataframe(table):
+#     d = {}
+#     for (state, symbol), value in table.items():
+#         value = encode_value(value)
+#         try:
+#             d[state][symbol] = value
+#         except KeyError:
+#             d[state] = {symbol: value}
+#
+#     return DataFrame.from_dict(d, orient='index', dtype=str)

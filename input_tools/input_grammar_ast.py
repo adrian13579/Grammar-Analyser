@@ -1,5 +1,5 @@
 from cmp.ast import Node
-from cmp.pycompiler import Grammar, Production
+from cmp.pycompiler import Grammar, Production, Sentence
 
 
 class Context:
@@ -82,8 +82,8 @@ class ProductionNode(Node):
             prod_body = self.right.evaluate(context)
         else:
             if self.right in context.Terminals:
-                prod_body = context.Terminals[self.right]
+                prod_body = Sentence(context.Terminals[self.right])
             elif self.right in context.NonTerminals:
-                prod_body = context.NonTerminals[self.right]
+                prod_body = Sentence(context.NonTerminals[self.right])
         context.Grammar.Add_Production(Production(prod_head, prod_body))
         return

@@ -3,7 +3,8 @@ from cmp.automata import automata_union, automata_concatenation, automata_minimi
 from cmp.pycompiler import Grammar, EOF
 from cmp.utils import Token
 from cmp.first_follow import compute_firsts, compute_follows
-from cmp.ll1_parser import metodo_predictivo_no_recursivo, build_parsing_table
+from cmp.ll1_parser import metodo_predictivo_no_recursivo, build_parsing_table, \
+    deprecated_metodo_predictivo_no_recursivo
 
 
 class Node:
@@ -158,8 +159,10 @@ def _regex(expression: str) -> DFA:
     tokens = regex_tokenizer(expression, G,False)
     first = compute_firsts(G)
     follow = compute_follows(G, first)
-    parsing_table = build_parsing_table(G, first, follow)
+    parsing_table, _ = build_parsing_table(G, first, follow)
     parser = metodo_predictivo_no_recursivo(G, parsing_table )
+    # parser = deprecated_metodo_predictivo_no_recursivo(G, parsing_table )
+
     left_parse = parser(tokens)
     ast = evaluate_parse(left_parse, tokens)
     nfa = ast.evaluate()

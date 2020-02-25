@@ -55,7 +55,7 @@ class Input:
     def __init__(self, input_grammar: str, input_regex: str):
         first = compute_firsts(G)
         follow = compute_follows(G, first)
-        parsing_table = build_parsing_table(G, first, follow)
+        parsing_table, _ = build_parsing_table(G, first, follow)
         parser = metodo_predictivo_no_recursivo(G, parsing_table)
         tokens = lexer(input_grammar)
         tokens = [x for x in tokens if
@@ -90,22 +90,26 @@ class Input:
         return self.lexer(string)
 
 
-input_gram = '''
-Distinguido: S
-NoTerminales: A, B, C
-Terminales: a, b, c
-S = A + B + C
-A = epsilon
-'''
+# input_gram = '''
+# Distinguido: S
+# NoTerminales: A, B, C
+# Terminales: a, b, c
+# S = A + B + C
+# A = epsilon
+# '''
 
-input_rege = '''
-a : (a)*,
-b : (b)*,
-c : (c|C)*
-'''
-
-string = 'aaaaaabbbbcCCCcc'
+# input_rege = '''
+# a : (a)*,
+# b : (b)*,
+# c : (c|C)*
+# '''
+#
+# string = 'aaaaaabbbbcCCCcc'
 
 # var = Input(input_gram, input_rege)
-# print(var.get_grammar())
-# print(var.tokenize_input_string(string))
+# g = var.get_grammar()
+# tokens = var.tokenize_input_string(string)
+#
+# print(tokens)
+
+
