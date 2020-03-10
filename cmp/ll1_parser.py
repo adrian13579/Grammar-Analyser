@@ -139,7 +139,8 @@ def sintetize_symbols(G: Grammar):
                 str = ''
                 for symbol in prod.Right:
                     try:
-                        str += dic[symbol]
+                        str += ' ' + dic[symbol]
+
                     except:
                         break
                 else:
@@ -150,22 +151,31 @@ def sintetize_symbols(G: Grammar):
 # X es el no terminal, con c terminal tal q len( M[X,c] ) > 1
 def conflict_string(G: Grammar, X: NonTerminal, c: Terminal, M: {}, Firsts, Follows):
     tuples = tuples_road(G, G.startSymbol, X)
-    left, right = Get_conflict_production(tuples)
-    tuples1 = tuples_road(G, X, c)
-    left1, right1 = Get_conflict_production(tuples1)
+    if tuples is not None:
+        left, right = Get_conflict_production(tuples)
+        tuples1 = tuples_road(G, X, c)
+        left1, right1 = Get_conflict_production(tuples1)
+    else:
+        tuples1 = tuples_road(G, X, c)
+        left1, right1 = Get_conflict_production(tuples1)
 
     _str = ""
     dic = sintetize_symbols(G)
 
-    for elem in right:
-        if not elem == X:
-            _str += expand(elem, dic)
-        else:
-            _str += c.__str__()
-            for i in range(1, len(right1)):
-                _str += expand(right1[i], dic)
+    if tuples is None:
+        _str += c.__str__()
+        for i in range(1, len(right1)):
+            _str += " " + expand(right1[i], dic)
+    else:
+        for elem in right:
+            if not elem == X:
+                _str += " "+expand(elem, dic)
+            else:
+                _str += c.__str__()
+                for i in range(1, len(right1)):
+                    _str += " " + expand(right1[i], dic)
 
-    return _str
+    return _str.split()
 
 
 def tuples_road(G: Grammar, start: Symbol, X: Symbol):
@@ -236,28 +246,3 @@ def Get_conflict_production(tuples: []):
                 break
     return left, right
 
-
-G = Grammar()
-E = G.NonTerminal('E', True)
-T, F, X, Y = G.NonTerminals('T F X Y')
-a, b, c = G.Terminals('a b c')
-
-E %= T + X
-X %= T + X | G.Epsilon | c + T
-T %= F + Y
-F %= a + Y | c + Y | G.Epsilon
-Y %= b + X | a + T
-
-# E %= X
-# E %= T
-# X %= T
-# X %= Y
-# T %= X
-# T %= Y
-# Y %= a
-
-
-# firsts = compute_firsts(G)
-# follows = compute_follows(G, firsts)
-# M, _conflict = build_parsing_table(G, firsts, follows)
-# print(conflict_string(G, _conflict[1][0], _conflict[1][1], M, firsts, follows))

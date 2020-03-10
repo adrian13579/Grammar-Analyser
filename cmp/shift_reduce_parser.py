@@ -25,7 +25,7 @@ class ShiftReduceParser:
 
             # Your code here!!! (Detect error)
             try:
-                action, tag = self.action[state, lookahead]
+                action, tag = self.action[state, lookahead][0]
                 # Your code here!!! (Shift case)
                 if action == ShiftReduceParser.SHIFT:
                     stack.append(tag)
@@ -33,7 +33,7 @@ class ShiftReduceParser:
                 # Your code here!!! (Reduce case)
                 elif action == ShiftReduceParser.REDUCE:
                     for _ in range(len(tag.Right)): stack.pop()
-                    stack.append(self.goto[stack[-1], tag.Left])
+                    stack.append(self.goto[stack[-1], tag.Left][0])
                     output.append(tag)
                 # Your code here!!! (OK case)
                 elif action == ShiftReduceParser.OK:
@@ -93,3 +93,4 @@ class ShiftReduceParser:
 #             else:
 #                 raise Exception('Invalid case')
 #                 return
+

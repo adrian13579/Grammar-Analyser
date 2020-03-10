@@ -22,7 +22,13 @@ def new_transitions(trans: {}, G: Grammar, diccionario: {}, end):
                 trans[(diccionario[prod.Left], str(prod.Right[0]))] = [diccionario[end]]
             else:
                 trans[(diccionario[prod.Left], str(prod.Right[0]))] = [diccionario[prod.Right[1]]]
-    trans[(0, 'ε')] = [1]
+    #trans[(0, 'ε')] = [1]
+    for term in G.terminals:
+        try:
+            a = trans[(1, str(term))]
+            trans[(0, term)] = a
+        except:
+            pass
     return trans
 
 
@@ -55,7 +61,8 @@ def reg_grammar_to_automaton(G: Grammar):
 
     trans = {}
     trans = new_transitions(trans, G, diccionario, end)
-
+    if trans is None:
+        return None
     return NFA(states=len(G.nonTerminals) + 2, finals=_finals, transitions=trans)
 
 
@@ -71,7 +78,6 @@ def bracket_balanced(_str: str):
             balance -= 1
         if balance == 0 and char != _str[len(_str) - 1]:
             return False
-
     return True
 
 
@@ -86,7 +92,6 @@ def take_unnecessary_epsilon(_str: str):
                 if (_str[i - 1] == '|' and _str[i + 1] == '|') or (_str[i - 1] == '|' and _str[i + 1] == ')') or (
                         _str[i - 1] == '(' and _str[i + 1] == '|'):
                     aux += 'ε'
-
         else:
             aux += _str[i]
     return aux
@@ -123,7 +128,11 @@ def DFA_to_GNFA_transitions(transitions: {}, automaton: DFA):
                         continue
                     elif automaton.transitions[dic][t1] == dest:
                         term += '|' + t1
-                transitions[(dic, term)] = dest
+                try:
+                    transitions[(dic, term)] += dest
+                except:
+                    transitions[(dic, term)] = dest
+
     return transitions
 
 
@@ -163,16 +172,16 @@ def automaton_to_reg_expression(automaton: DFA):
         aux_transitions = {}
         for _from in come_to_me:
             for _to in i_go_to:
-                _str = _from[1] if len(_from[1]) <= 1 or bracket_balanced(_from[1]) else '(' + _from[1] + ')'
+                _str = str(_from[1]) if len(_from[1]) <= 1 or bracket_balanced(str(_from[1])) else '(' + str(_from[1]) + ')'
                 if _str == 'ε':
                     _str = ''
                 if stay_in_me is not None:
-                    _str += '(' + stay_in_me[1] + ')*' if not bracket_balanced(stay_in_me[1]) and len(
-                        stay_in_me[1]) > 1 else stay_in_me[1] + '*'
+                    _str += '(' + str(stay_in_me[1]) + ')*' if not bracket_balanced(str(stay_in_me[1])) and len(
+                        stay_in_me[1]) > 1 else str(stay_in_me[1]) + '*'
                 if _to[1] == 'ε' and len(_str):
                     do_nothing = 0
                 else:
-                    _str += _to[1] if len(_to[1]) <= 1 or bracket_balanced(_from[1]) else '(' + _to[1] + ')'
+                    _str += str(_to[1]) if len(_to[1]) <= 1 or bracket_balanced(_from[1]) else '(' + str(_to[1]) + ')'
                 aux, _str = work_with_bridge_transition(transitions, _from, _to, _str)
                 if aux is not None:
                     del transitions[aux]
@@ -187,7 +196,6 @@ def automaton_to_reg_expression(automaton: DFA):
 
     return take_unnecessary_epsilon(_str)
 
-
 # G = Grammar()
 # E = G.NonTerminal('E', True)
 # T, F, X, Y, Z, W = G.NonTerminals('T F X Y Z W')
@@ -201,24 +209,36 @@ def automaton_to_reg_expression(automaton: DFA):
 # Z %= b + X | c + Y
 # W %= F + b | Z + c
 
-G = Grammar()
-S = G.NonTerminal('S', True)
-A, B = G.NonTerminals('A B')
-a, b, c = G.Terminals('a b c')
+# G = Grammar()
+# S = G.NonTerminal('S', True)
+# A, B = G.NonTerminals('A B')
+# a, b, c = G.Terminals('a b c')
+#
+# S %= a | a + A | b + B | G.Epsilon
+# A %= a + S | a + A
+# B %= c + S | G.Epsilon
 
-S %= a | a + A | b + B | G.Epsilon
-A %= a + S | a + A
-B %= c + S | G.Epsilon
+# # bracket_balanced('(asdfgadjfgasdf()DASdaksdj()')
+# dasfhjdasd = reg_grammar_to_automaton(G)
+# # print(dasfhjdasd.transitions)
+# dasfhjdasd.graph().write_png('auto.png')
+#
+# dasfhjdasd = nfa_to_dfa(dasfhjdasd)
+#
+# # dasfhjdasd = DFA(3, [1, 2], {(0, 'a'): 1, (0, 'b'): 2, (1, 'a'): 0, (1, 'b'): 1, (2, 'a'): 1, (2, 'b'): 0})
+# dasfhjdasd.graph().write_png('auto1.png')
+# # print("DFA")
+# #
+# print(automaton_to_reg_expression(dasfhjdasd))
+# G = Grammar()
+# E = G.NonTerminal('E',True)
+# T, F = G.NonTerminals('T F')
+# plus, star, num, o_par, c_par = G.Terminals('+ * num ( )')
+#
+# E%= E + plus + T | T
+# T%= T + star + F | F
+# F%= num | o_par + E + c_par
 
-# bracket_balanced('(asdfgadjfgasdf()DASdaksdj()')
 # dasfhjdasd = reg_grammar_to_automaton(G)
 # print(dasfhjdasd.transitions)
 # dasfhjdasd.graph().write_png('auto.png')
-
-# dasfhjdasd = nfa_to_dfa(dasfhjdasd)
-
-# dasfhjdasd = DFA(3, [1, 2], {(0, 'a'): 1, (0, 'b'): 2, (1, 'a'): 0, (1, 'b'): 1, (2, 'a'): 1, (2, 'b'): 0})
-# dasfhjdasd.graph().write_png('auto1.png')
-# print("DFA")
-#
-# print(automaton_to_reg_expression(dasfhjdasd))

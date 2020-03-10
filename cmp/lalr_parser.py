@@ -96,12 +96,51 @@ class LALR1Parser(ShiftReduceParser):
 
                 pass
 
-    # @staticmethod
-    def _register(self, table, key, value):
+    @staticmethod
+    def _register(table, key, value):
         try:
-            assert key not in table or table[key] == value
-            table[key] = value
+            if value not in table[key]:
+                table[key].append(value)
         except:
-            if table[key] not in self.conflicts:
-                self.conflicts.append((key, table[key]))
-            self.conflicts.append((key, value))
+            table[key] = [value]
+
+
+def conflict_string_lalr(action, goto, terminals):
+    return _conflict_string_lalr([0], set(), action, goto, terminals, False)
+
+
+def _conflict_string_lalr(stack, visited, action_table, goto_table, terminals, conflict_bool):
+    state = stack[-1]
+
+    for t in terminals:
+        if (state, t) in visited:
+            continue
+
+        try:
+            value = action_table[(state, t)]
+        except KeyError:
+            continue
+
+        if len(value) > 1:
+            conflict_bool = True
+
+        action, tag = value[0]
+
+        if action == 'OK':
+            if conflict_bool:
+                return []
+            return None
+
+        if action == 'SHIFT':
+            visited.add((state, t))
+            conflict = _conflict_string_lalr(stack + [tag], visited, action_table, goto_table, terminals, conflict_bool)
+            if conflict is None:
+                continue
+            return [t] + conflict
+
+        if action == 'REDUCE':
+            temp_stack = stack[: len(stack) - len(tag.Right)]
+            return _conflict_string_lalr(temp_stack + [goto_table[temp_stack[-1], tag.Left][0]], visited, action_table,
+                                         goto_table, terminals, conflict_bool)
+
+    return None

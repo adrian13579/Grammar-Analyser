@@ -131,8 +131,11 @@ class LR1Parser(ShiftReduceParser):
 
     @staticmethod
     def _register(table, key, value):
-        assert key not in table or table[key] == value, 'Shift-Reduce or Reduce-Reduce conflict!!!'
-        table[key] = value
+        try:
+            if value not in table[key]:
+                table[key].append(value)
+        except:
+            table[key] = [value]
 
 
 # def encode_value(value):
@@ -160,3 +163,44 @@ class LR1Parser(ShiftReduceParser):
 #             d[state] = {symbol: value}
 #
 #     return DataFrame.from_dict(d, orient='index', dtype=str)
+
+
+def conflict_string_lr1(action, goto, terminals):
+    return _conflict_string_lr1([0], set(), action, goto, terminals, False)
+
+
+def _conflict_string_lr1(stack, visited, action_table, goto_table, terminals, conflict_bool):
+    state = stack[-1]
+
+    for t in terminals:
+        if (state, t) in visited:
+            continue
+
+        try:
+            value = action_table[(state, t)]
+        except KeyError:
+            continue
+
+        if len(value) > 1:
+            conflict_bool = True
+
+        action, tag = value[0]
+
+        if action == 'OK':
+            if conflict_bool:
+                return []
+            return None
+
+        if action == 'SHIFT':
+            visited.add((state, t))
+            conflict = _conflict_string_lr1(stack + [tag], visited, action_table, goto_table, terminals, conflict_bool)
+            if conflict is None:
+                continue
+            return [t] + conflict
+
+        if action == 'REDUCE':
+            temp_stack = stack[: len(stack) - len(tag.Right)]
+            return _conflict_string_lr1(temp_stack + [goto_table[temp_stack[-1], tag.Left][0]], visited, action_table,
+                                        goto_table, terminals, conflict_bool)
+
+    return None
